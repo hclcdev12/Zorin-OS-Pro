@@ -40,6 +40,8 @@ bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/hclcdev12/Zorin
 bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/hclcdev12/Zorin-OS-Pro/raw/refs/heads/main/zorin.sh) -U -X
 ```
 
+See [CONTENT.md](</CONTENT.md>) for exactly what the minimal and extra modes install.
+
 ## From A Local Clone
 
 If you prefer to read the script before running it, clone the repository and run it from there. The GPG keys and `make_dummy_deb.sh` are then taken from the clone instead of being downloaded.
