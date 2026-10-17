@@ -1,4 +1,4 @@
-# Zorin-OS-Pro [![Shellcheck](https://img.shields.io/github/actions/workflow/status/NanashiTheNameless/Zorin-OS-Pro/shellcheck.yml?branch=main&label=Shellcheck&style=for-the-badge&labelColor=0d1117)](https://github.com/NanashiTheNameless/Zorin-OS-Pro/actions/workflows/shellcheck.yml)
+# Zorin-OS-Pro [![Shellcheck](https://img.shields.io/github/actions/workflow/status/hclcdev12/Zorin-OS-Pro/shellcheck.yml?branch=main&label=Shellcheck&style=for-the-badge&labelColor=0d1117)](https://github.com/hclcdev12/Zorin-OS-Pro/actions/workflows/shellcheck.yml)
 
 ## This script turns your Zorin OS CORE instance into a Zorin OS PRO instance
 
@@ -16,9 +16,11 @@ $48USD (ZorinOS Pro price as of writing) is also too expensive for the services 
 I am not modifying/stealing any of their code nor am I providing any of their IP. \
 See [raw/NOTICE.txt](</raw/NOTICE.txt>) for more info.
 
-## Stargazers over time
+## About this fork
 
-[![Stargazers over time](<https://starchart.cc/NanashiTheNameless/Zorin-OS-Pro.svg?variant=adaptive>)](<https://starchart.cc/NanashiTheNameless/Zorin-OS-Pro>)
+The original repository, `NanashiTheNameless/Zorin-OS-Pro`, no longer exists on GitHub. \
+This fork is based on [alsyundawy/Zorin-OS-Pro](<https://github.com/alsyundawy/Zorin-OS-Pro>) and keeps the scripts working: \
+`zorin.sh` now uses the GPG keys and helper script from the local checkout when run from a clone, and falls back to downloading them from the alsyundawy fork otherwise.
 
 ## Usage
 
@@ -29,32 +31,44 @@ Copy the command below, paste in your terminal, enter your password when prompte
 ## For The Minimum Additional Content
 
 ```sh
-bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/zorin.sh) -U
+bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/hclcdev12/Zorin-OS-Pro/raw/refs/heads/main/zorin.sh) -U
 ```
 
 ## For A Lot of Extra Content (Recommended)
 
 ```sh
-bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/zorin.sh) -U -X
+bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/hclcdev12/Zorin-OS-Pro/raw/refs/heads/main/zorin.sh) -U -X
 ```
+
+## From A Local Clone
+
+If you prefer to read the script before running it, clone the repository and run it from there. The GPG keys and `make_dummy_deb.sh` are then taken from the clone instead of being downloaded.
+
+```sh
+git clone https://github.com/hclcdev12/Zorin-OS-Pro.git
+cd Zorin-OS-Pro
+bash ./zorin.sh
+```
+
+Add `-X` for the extra content and `-U` for unattended mode, as above.
 
 ## To Downgrade The Pro Changes
 
 This restores the standard Zorin package sources and removes the Pro-specific packages installed by this tool. It does not delete installed keys or optional extra packages.
 
 ```sh
-bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/downgrade.sh)
+bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/hclcdev12/Zorin-OS-Pro/raw/refs/heads/main/downgrade.sh)
 ```
 
 To preview the downgrade without making any changes, including short delays to simulate the real script timing:
 
 ```sh
-bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/downgrade.sh) -D
+bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/hclcdev12/Zorin-OS-Pro/raw/refs/heads/main/downgrade.sh) -D
 ```
 
 ## Examples
 
-(example images are taken of a Virtualbox image made from a core iso as it is easier to perform debugging of a took like this in a VM)
+(example images are taken of a Virtualbox image made from a core iso as it is easier to perform debugging of a tool like this in a VM)
 
 ![Zorin OS Pro Appearance Menu](<https://github.com/user-attachments/assets/22945121-0e8c-44d4-ae81-dae49b62b662>)
 
@@ -64,6 +78,6 @@ bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNamel
 
 ## Credits
 
-[All Major Contributors](<https://github.com/NanashiTheNameless/Zorin-OS-Pro/blob/main/CONTRIBUTORS.md>)
+[All Major Contributors](<https://github.com/hclcdev12/Zorin-OS-Pro/blob/main/CONTRIBUTORS.md>)
 
-[All Other Contributors](<https://github.com/NanashiTheNameless/Zorin-OS-Pro/graphs/contributors>)
+[All Other Contributors](<https://github.com/hclcdev12/Zorin-OS-Pro/graphs/contributors>)
