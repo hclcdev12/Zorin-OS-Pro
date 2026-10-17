@@ -2,6 +2,26 @@
 
 set -o pipefail
 
+# Where this script lives when run from a local checkout. When run via
+# "bash <(curl ...)" this points at /dev/fd, no local files are found, and
+# every repo file is downloaded from REPO_RAW_BASE instead.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+REPO_RAW_BASE="https://github.com/alsyundawy/Zorin-OS-Pro/raw/refs/heads/main"
+
+# Copy a repo file from the local checkout if present, otherwise download it.
+# Usage: fetch_repo_file <path relative to repo root> <destination>
+function fetch_repo_file() {
+	local rel="$1"
+	local dest="$2"
+	if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/$rel" ]; then
+		echo "Using local file \"$SCRIPT_DIR/$rel\""
+		cp -f "$SCRIPT_DIR/$rel" "$dest"
+	else
+		echo "Downloading \"$REPO_RAW_BASE/$rel\""
+		curl -fL -H 'DNT: 1' -H 'Sec-GPC: 1' "$REPO_RAW_BASE/$rel" --output "$dest"
+	fi
+}
+
 # Make sure the temp directory gets removed on script exit.
 trap 'exit 1' HUP INT PIPE QUIT TERM
 trap '
@@ -249,33 +269,33 @@ function apt_update_with_retry() {
 	return 1
 }
 
-# Manually add the public gpg keys
-if ! curl -L -H 'DNT: 1' -H 'Sec-GPC: 1' https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/raw/zorin-os.gpg --output "$TEMPD/zorin-os.gpg"; then
-	echo "Error: Failed to download Zorin OS public gpg key."
+# Add the public gpg keys from the local checkout or the repo
+if ! fetch_repo_file "raw/zorin-os.gpg" "$TEMPD/zorin-os.gpg"; then
+	echo "Error: Failed to get Zorin OS public gpg key."
 	exit 1
 fi
 if [ ! -s "$TEMPD/zorin-os.gpg" ]; then
-	echo "Error: Downloaded Zorin OS public gpg key file is empty or missing."
+	echo "Error: Zorin OS public gpg key file is empty or missing."
 	exit 1
 fi
 
 if [ "$version" = "18" ]; then
-	if ! curl -L -H 'DNT: 1' -H 'Sec-GPC: 1' https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/raw/zorin-os-premium-18.gpg --output "$TEMPD/zorin-os-premium-18.gpg"; then
-		echo "Error: Failed to download premium public gpg key."
+	if ! fetch_repo_file "raw/zorin-os-premium-18.gpg" "$TEMPD/zorin-os-premium-18.gpg"; then
+		echo "Error: Failed to get premium public gpg key."
 		exit 1
 	fi
 	if [ ! -s "$TEMPD/zorin-os-premium-18.gpg" ]; then
-		echo "Error: Downloaded premium public gpg key file is empty or missing."
+		echo "Error: Premium public gpg key file is empty or missing."
 		exit 1
 	fi
 
 else
-	if ! curl -L -H 'DNT: 1' -H 'Sec-GPC: 1' https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/raw/zorin-os-premium.gpg --output "$TEMPD/zorin-os-premium.gpg"; then
-		echo "Error: Failed to download premium public gpg key."
+	if ! fetch_repo_file "raw/zorin-os-premium.gpg" "$TEMPD/zorin-os-premium.gpg"; then
+		echo "Error: Failed to get premium public gpg key."
 		exit 1
 	fi
 	if [ ! -s "$TEMPD/zorin-os-premium.gpg" ]; then
-		echo "Error: Downloaded premium public gpg key file is empty or missing."
+		echo "Error: Premium public gpg key file is empty or missing."
 		exit 1
 	fi
 fi
@@ -352,17 +372,23 @@ echo ""
 echo "Now making and creating & installing dummy debs to satisfy dependencies for zorin-os-premium-keyring (if needed)..."
 echo ""
 
+if ! dpkg -s "zorin-os-premium-keyring" >/dev/null 2>&1 || ! dpkg -s "zorin-os-keyring" >/dev/null 2>&1; then
+	if ! fetch_repo_file "make_dummy_deb.sh" "$TEMPD/make_dummy_deb.sh"; then
+		echo "Warning: Failed to get make_dummy_deb.sh. Dummy debs cannot be created. Continuing anyway..."
+	fi
+fi
+
 if dpkg -s "zorin-os-premium-keyring" >/dev/null 2>&1; then
 	echo ""
 	echo "zorin-os-premium-keyring is already installed, skipping dummy deb creation/installation."
 	echo ""
 else
 	if [ "$version" = "18" ]; then
-		if ! bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/make_dummy_deb.sh) -w "$TEMPD/Dummy/" -n zorin-os-premium-keyring -v 1.1 -o "$TEMPD/zorin-os-premium-keyring.deb"; then
+		if ! bash "$TEMPD/make_dummy_deb.sh" -w "$TEMPD/Dummy/" -n zorin-os-premium-keyring -v 1.1 -o "$TEMPD/zorin-os-premium-keyring.deb"; then
 			echo "Warning: Failed to create dummy deb for zorin-os-premium-keyring (1.1). Continuing anyway..."
 		fi
 	else
-		if ! bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/make_dummy_deb.sh) -w "$TEMPD/Dummy/" -n zorin-os-premium-keyring -v 1.0 -o "$TEMPD/zorin-os-premium-keyring.deb"; then
+		if ! bash "$TEMPD/make_dummy_deb.sh" -w "$TEMPD/Dummy/" -n zorin-os-premium-keyring -v 1.0 -o "$TEMPD/zorin-os-premium-keyring.deb"; then
 			echo "Warning: Failed to create dummy deb for zorin-os-premium-keyring (1.0). Continuing anyway..."
 		fi
 	fi
@@ -373,7 +399,7 @@ if dpkg -s "zorin-os-keyring" >/dev/null 2>&1; then
 	echo "zorin-os-keyring is already installed, skipping dummy deb creation/installation."
 	echo ""
 else
-	if ! bash <(curl -H 'DNT: 1' -H 'Sec-GPC: 1' -fsSL https://github.com/NanashiTheNameless/Zorin-OS-Pro/raw/refs/heads/main/make_dummy_deb.sh) -w "$TEMPD/Dummy/" -n zorin-os-keyring -v 1.1 -o "$TEMPD/zorin-os-keyring.deb"; then
+	if ! bash "$TEMPD/make_dummy_deb.sh" -w "$TEMPD/Dummy/" -n zorin-os-keyring -v 1.1 -o "$TEMPD/zorin-os-keyring.deb"; then
 		echo "Warning: Failed to create dummy deb for zorin-os-keyring. Continuing anyway..."
 	fi
 fi
